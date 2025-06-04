@@ -1,0 +1,10 @@
+- name: Probar conexión con Nutanix Prism Central
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Obtener lista de VMs
+      nutanix.ncp.vms_info:
+        pc_host: "{{ prism_host }}"
+        username: "{{ prism_user }}"
+        password: "{{ prism_pass }}"
+        validate_certs: false

@@ -1,0 +1,18 @@
+- name: Diagnóstico de contenedor en ejecución
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Mostrar rutas relevantes
+      shell: |
+        echo "PWD: $(pwd)"
+        echo "HOME: $HOME"
+        echo "USER: $(whoami)"
+        echo "STORAGE: $(findmnt / -o SOURCE,TARGET,SIZE,USED,AVAIL -n)"
+        echo "TMP: $(df -h /tmp)"
+        echo "VAR: $(df -h /var)"
+        echo "MOUNTED FS:"
+        df -hT
+      register: container_env
+
+    - debug:
+        var: container_env.stdout_lines

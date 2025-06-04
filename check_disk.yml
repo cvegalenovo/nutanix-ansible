@@ -1,0 +1,11 @@
+- name: Diagnóstico de espacio en contenedor
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ejecutar df -h
+      command: df -h
+      register: result
+
+    - name: Mostrar salida de df -h
+      debug:
+        var: result.stdout_lines

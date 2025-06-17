@@ -15,7 +15,7 @@
         nutanix_host: "{{ nutanix_pc_host }}"
         nutanix_username: "{{ nutanix_username }}"
         nutanix_password: "{{ nutanix_password }}"
-        port: "{{ nutanix_port }}"
+        nutanix_port: "{{ nutanix_port }}"
         validate_certs: "{{ validate_certs }}"
       register: pc_info
 

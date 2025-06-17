@@ -1,4 +1,5 @@
 ---
 collections:
-  - name: nutanix.ncp
-    version: ">=1.0.0"
+  - name: https://github.com/nutanix/nutanix.ansible_collection
+    type: git
+    version: main

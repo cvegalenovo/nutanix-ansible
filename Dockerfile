@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 quay.io/ansible/awx-ee:2.14
+FROM --platform=linux/amd64 quay.io/ansible/awx-ee:24.2.0
 
 WORKDIR /runner
 

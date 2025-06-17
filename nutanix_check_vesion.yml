@@ -1,0 +1,24 @@
+---
+- name: Prueba de conexión a Prism Central
+  hosts: localhost
+  gather_facts: false
+  vars:
+    nutanix_pc_host: "{{ lookup('env', 'NUTANIX_PC_HOST') }}"
+    nutanix_username: "{{ lookup('env', 'NUTANIX_USERNAME') }}"
+    nutanix_password: "{{ lookup('env', 'NUTANIX_PASSWORD') }}"
+    nutanix_port: 9440
+    validate_certs: false
+
+  tasks:
+    - name: Obtener versión de Prism Central
+      nutanix.ncp.prism_version_info:
+        host: "{{ nutanix_pc_host }}"
+        username: "{{ nutanix_username }}"
+        password: "{{ nutanix_password }}"
+        port: "{{ nutanix_port }}"
+        validate_certs: "{{ validate_certs }}"
+      register: version_info
+
+    - name: Mostrar resultado
+      debug:
+        var: version_info

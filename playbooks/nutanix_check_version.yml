@@ -1,0 +1,24 @@
+---
+- name: Verificar versión de Prism Central con módulo ntnx_pc_config_info_v2
+  hosts: localhost
+  gather_facts: false
+  vars:
+    nutanix_pc_host: "{{ lookup('env', 'NUTANIX_PC_HOST') }}"
+    nutanix_username: "{{ lookup('env', 'NUTANIX_USERNAME') }}"
+    nutanix_password: "{{ lookup('env', 'NUTANIX_PASSWORD') }}"
+    nutanix_port: 9440
+    validate_certs: false
+
+  tasks:
+    - name: Obtener configuración de Prism Central
+      nutanix.ncp.ntnx_pc_config_info_v2:
+        nutanix_host: "{{ nutanix_pc_host }}"
+        nutanix_username: "{{ nutanix_username }}"
+        nutanix_password: "{{ nutanix_password }}"
+        port: "{{ nutanix_port }}"
+        validate_certs: "{{ validate_certs }}"
+      register: pc_info
+
+    - name: Mostrar versión de Prism Central
+      debug:
+        msg: "La versión de Prism Central es: {{ pc_info.response[0].config.build_info.version }}"

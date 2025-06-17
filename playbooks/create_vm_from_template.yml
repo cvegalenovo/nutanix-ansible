@@ -1,0 +1,78 @@
+---
+- name: Crear VM RHEL9 en Nutanix AHV via Prism Central
+  hosts: localhost
+  gather_facts: false
+  collections:
+    - nutanix.ncp  # usar módulos de la colección oficial Nutanix
+
+  vars:
+    pc_host: "10.16.158.61"                # Dirección de Prism Central
+    pc_username: "admin"                       # Usuario con permisos en Prism
+    pc_password: "Lenovo123$"                # Contraseña (en prácticas reales usar Vault)
+    validate_certs: false                     # Ejemplo: no validar cert SSL (entornos demo)
+    cluster_uuid: "0006350b-1fc1-a39b-7729-5c25738783ea"  # UUID del clúster AHV destino
+    image_name: "rhel9.6"             # Nombre de la imagen/template base registrada en PC
+    vm_name: "rhel9-server01"                 # Nombre deseado para la VM
+    vm_vcpus: 2                               # vCPU totales (ejemplo: 2 vCPU en 1 socket)
+    vm_sockets: 1
+    vm_memory: 4096                           # Memoria en MiB (4096 MiB = 4 GB)
+    network_name: "TestNet"           # Nombre de la red (subnet) donde conectar la VM
+    cloud_init_file: "files/rhel9_cloud_init.cfg"  # Ruta a archivo cloud-init user-data (opcional)
+
+  tasks:
+    - name: Verificar si la VM ya existe
+      nutanix.ncp.ntnx_vms_info_v2:
+        nutanix_host: "{{ pc_host }}"
+        nutanix_username: "{{ pc_username }}"
+        nutanix_password: "{{ pc_password }}"
+        validate_certs: "{{ validate_certs }}"
+        filter: 'vm_name=="{{ vm_name }}"'   # filtro por nombre de VM en Prism Central
+      register: vm_info
+
+    - name: Crear VM desde imagen template de RHEL9 en Prism Central
+      nutanix.ncp.ntnx_vms_v2:
+        state: present
+        name: "{{ vm_name }}"
+        nutanix_host: "{{ pc_host }}"
+        nutanix_username: "{{ pc_username }}"
+        nutanix_password: "{{ pc_password }}"
+        validate_certs: "{{ validate_certs }}"
+        cluster:
+          ext_id: "{{ cluster_uuid }}"
+        num_vcpus_per_socket: "{{ vm_vcpus }}"
+        num_sockets: "{{ vm_sockets }}"
+        memory_size_mib: "{{ vm_memory }}"
+        # Configurar una NIC en la red especificada (se asume DHCP para IP automática)
+        nics:
+          - subnet:
+              name: "{{ network_name }}"
+            is_connected: true
+        # Disco principal a partir de la imagen base (clona disco del template RHEL9)
+        disks:
+          - data_source_reference:
+              kind: image
+              name: "{{ image_name }}"    # también podría usarse image UUID si se prefiere
+            device_properties:
+              device_type: DISK
+        # Personalización guest mediante cloud-init (opcional, si la imagen lo soporta)
+        guest_customization:
+          cloud_init:
+            # Incrustar el contenido de cloud_init_file codificado en base64
+            user_data: "{{ lookup('file', cloud_init_file) | b64encode }}"
+      when: vm_info.vms|length == 0    # solo crea si la VM no existía
+      register: new_vm
+
+    - name: Encender la VM recién creada
+      nutanix.ncp.ntnx_vms_power_actions_v2:
+        nutanix_host: "{{ pc_host }}"
+        nutanix_username: "{{ pc_username }}"
+        nutanix_password: "{{ pc_password }}"
+        validate_certs: "{{ validate_certs }}"
+        uuid: "{{ new_vm.vms[0].ext_id }}"   # UUID de la VM creada
+        state: powered_on
+      when: new_vm.changed
+
+    - name: Mostrar detalles de la VM creada
+      ansible.builtin.debug:
+        msg: "VM '{{ vm_name }}' creada con UUID={{ new_vm.vms[0].ext_id }} y encendida correctamente."
+      when: new_vm.changed

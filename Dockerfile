@@ -4,7 +4,9 @@ WORKDIR /runner
 
 # Instala el cliente de Nutanix como root sin usar cache
 USER root
-RUN pip3 install --no-cache-dir ntnx-prism-py-client
+RUN pip3 install --no-cache-dir \
+    ntnx-prism-py-client \
+    ntnx-vmm-py-client
 
 # Copia la colección local de Nutanix
 COPY collections /usr/share/ansible/collections
